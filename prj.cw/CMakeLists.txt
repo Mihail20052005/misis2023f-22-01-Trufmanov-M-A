@@ -1,0 +1,5 @@
+find_package(GLUT REQUIRED)
+find_package(soil CONFIG REQUIRED)
+add_executable (main "main.cpp")
+target_link_libraries(main PRIVATE GLUT::GLUT)
+target_link_libraries(main PRIVATE soil)
