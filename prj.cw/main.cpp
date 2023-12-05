@@ -3,16 +3,19 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+
 bool buttonPressed = false;
 bool button1 = false;
 bool buttonN = false;
+bool isRightMouseButtonPressed = false;
+int draggedPointIndex = -1;
 
 struct Point {
     float x, y;
 };
 
-int get_size_with_1(std::vector<Point> points) {
-    return (points.size() - 1);
+int get_size_with_1(const std::vector<Point>& points) {
+    return static_cast<int>(points.size()) - 1;
 }
 
 std::ostream& operator<<(std::ostream& os, const Point& point) {
@@ -24,15 +27,6 @@ std::fstream& operator<<(std::fstream& fs, const Point& point) {
     fs << "(" << point.x << ", " << point.y << ")";
     return fs;
 }
-
-/*void drawPoint(int x, int y, float red, float green, float blue) {
-    glPointSize(5.0);
-    glColor3f(red, green, blue);
-    glBegin(GL_POINTS);
-    glVertex2i(x, y);
-    glEnd();
-}
-*/
 
 GLuint textureID;
 std::vector<Point> points;
@@ -98,10 +92,7 @@ void display() {
             glVertex2f(new_points[0].x, new_points[0].y);
         }
         glEnd();
-
     }
-
-
 
     glutSwapBuffers();
 }
@@ -142,23 +133,24 @@ void keyboardFunc(unsigned char key, int x, int y) {
     }
 
     if (key == 'z') {
-        Point last_symbol = points[get_size_with_1(points)];
-        points.pop_back();
-        cancel_points.push_back(last_symbol);
+        if (!points.empty()) {
+            Point last_symbol = points[get_size_with_1(points)];
+            points.pop_back();
+            cancel_points.push_back(last_symbol);
+        }
         glutPostRedisplay();
     }
 
     if (key == 'y') {
-        points.push_back(cancel_points[0]);
-        cancel_points.pop_back();
+        if (!cancel_points.empty()) {
+            points.push_back(cancel_points.back());
+            cancel_points.pop_back();
+        }
         glutPostRedisplay();
     }
 
-
-
     if (key == 's') {
         std::ofstream outputFile("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/test_output.txt");
-        outputFile.clear();
         if (!outputFile.is_open()) {
             std::cout << "Error opening the file!" << std::endl;
         }
@@ -168,31 +160,82 @@ void keyboardFunc(unsigned char key, int x, int y) {
                 outputFile << points[i] << " ";
             }
         }
-
-
     }
 }
 
 void mouseClick(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-
         float glX = (float)(x * 2) / glutGet(GLUT_WINDOW_WIDTH) - 1.0;
         float glY = 1.0 - (float)(y * 2) / glutGet(GLUT_WINDOW_HEIGHT);
-        if (buttonN == true) {
-            new_points.push_back({ glX, glY });
-            std::cout << new_points[new_points.size() - 1] << ", ";
+
+        bool pointDeleted = false;
+
+        if (buttonN) {
+            for (size_t i = 0; i < new_points.size(); ++i) {
+                float distance = sqrt(pow(glX - new_points[i].x, 2) + pow(glY - new_points[i].y, 2));
+                if (distance < 0.05) {
+                    new_points.erase(new_points.begin() + i);
+                    pointDeleted = true;
+                    break;
+                }
+            }
         }
         else {
-            points.push_back({ glX, glY });
-            std::cout << points[points.size() - 1] << ", ";
+            for (size_t i = 0; i < points.size(); ++i) {
+                float distance = sqrt(pow(glX - points[i].x, 2) + pow(glY - points[i].y, 2));
+                if (distance < 0.05) {
+                    points.erase(points.begin() + i);
+                    pointDeleted = true;
+                    break;
+                }
+            }
         }
+
+        if (!pointDeleted) {
+            if (buttonN) {
+                new_points.push_back({ glX, glY });
+                std::cout << "New: " << new_points[new_points.size() - 1] << ", ";
+            }
+            else {
+                points.push_back({ glX, glY });
+                std::cout << "Points: " << points[points.size() - 1] << ", ";
+            }
+        }
+
+        glutPostRedisplay();
+    }
+    else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) {
+        float glX = (float)(x * 2) / glutGet(GLUT_WINDOW_WIDTH) - 1.0;
+        float glY = 1.0 - (float)(y * 2) / glutGet(GLUT_WINDOW_HEIGHT);
+
+        for (size_t i = 0; i < points.size(); ++i) {
+            float distance = sqrt(pow(glX - points[i].x, 2) + pow(glY - points[i].y, 2));
+            if (distance < 0.05) {
+                isRightMouseButtonPressed = true;
+                draggedPointIndex = i;
+                break;
+            }
+        }
+    }
+    else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) {
+        isRightMouseButtonPressed = false;
+        draggedPointIndex = -1;
+    }
+}
+
+void mouseMotion(int x, int y) {
+    if (isRightMouseButtonPressed && draggedPointIndex != -1) {
+        float glX = (float)(x * 2) / glutGet(GLUT_WINDOW_WIDTH) - 1.0;
+        float glY = 1.0 - (float)(y * 2) / glutGet(GLUT_WINDOW_HEIGHT);
+
+        points[draggedPointIndex].x = glX;
+        points[draggedPointIndex].y = glY;
+
         glutPostRedisplay();
     }
 }
 
 int main(int argc, char** argv) {
-    std::string str;
-    std::string colors;
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutCreateWindow("Image Display");
@@ -200,6 +243,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutMouseFunc(mouseClick);
+    glutMotionFunc(mouseMotion);
     glutKeyboardFunc(keyboardFunc);
     glEnable(GL_TEXTURE_2D);
 
