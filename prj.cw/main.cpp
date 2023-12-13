@@ -135,42 +135,34 @@ void loadTexture(const char* filename) {
 }
 
 void keyboardFunc(unsigned char key, int x, int y) {
-    if (key == 'b') {
-        buttonPressed = true;
-        std::cout << "Last " << points[points.size() - 1] << " First " << points[0] << std::endl;
-        glutPostRedisplay();
-    }
-
-    if (key == 'n') {
+    switch (key) {
+    case 'n':
         buttonN = true;
         std::cout << "New";
         glutPostRedisplay();
-    }
 
-    if (key == 'd') {
+    case 'd':
         points.clear();
         glutPostRedisplay();
-    }
 
-    if (key == 'z') {
+    case 'z':
         if (!points.empty()) {
             Point last_symbol = points[get_size_with_1(points)];
+            std::cout << last_symbol;
             points.pop_back();
             cancel_points.push_back(last_symbol);
+            glutPostRedisplay();
         }
-        glutPostRedisplay();
-    }
-
-    if (key == 'y') {
+        
+    case 'y':
         if (!cancel_points.empty()) {
             points.push_back(cancel_points.back());
             cancel_points.pop_back();
         }
         glutPostRedisplay();
-    }
 
-    if (key == 's') {
-        std::ofstream outputFile("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/test_output.txt");
+    case 's':
+        std::ofstream outputFile("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/res/test_output.txt");
         if (!outputFile.is_open()) {
             std::cout << "Error opening the file!" << std::endl;
         }
@@ -276,7 +268,7 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(keyboardFunc);
     glEnable(GL_TEXTURE_2D);
 
-    loadTexture("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/example_im.jpg");
+    loadTexture("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/res/example_im.jpg");
 
     glutMainLoop();
     return 0;
