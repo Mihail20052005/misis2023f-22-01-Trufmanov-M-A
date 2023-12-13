@@ -81,7 +81,7 @@ void display() {
     }
     glEnd();
 
-    if (!buttonN) {
+    if (!buttonN && get_size_with_1(points) + 1 > 2) {
         glBegin(GL_POLYGON);
         glColor4f(1.0, 1.0, 1.0, 0.5);
         for (const Point& p : points) {
@@ -111,23 +111,11 @@ void display() {
             glVertex2f(new_points.front().x, new_points.front().y);
         }
         glEnd();
-
-        glBegin(GL_POLYGON);
-        glColor4f(1.0, 1.0, 1.0, 0.5); 
-        for (const Point& p : new_points) {
-            glVertex2f(p.x, p.y);
-        }
-        glEnd();
     }
 
     glDisable(GL_BLEND);
     glutSwapBuffers();
 }
-
-
-
-
-
 
 void reshape(int width, int height) {
     glViewport(0, 0, width, height);
