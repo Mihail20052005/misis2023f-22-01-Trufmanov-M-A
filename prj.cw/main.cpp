@@ -4,7 +4,10 @@
 #include <vector>
 #include <fstream>
 #include <string>
+#include <nlohmann/json.hpp>
+#include <iomanip>
 
+using json = nlohmann::json;
 
 bool buttonPressed = false;
 bool button1 = false;
@@ -37,7 +40,6 @@ std::vector<Point> new_points;
 std::vector<Point> cancel_points;
 
 void display() {
-    
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -55,17 +57,14 @@ void display() {
 
     glPointSize(point_size);
 
-
     glColor3f(1.0, 1.0, 0.0);
 
-    
     glBegin(GL_POINTS);
     for (const Point& p : points) {
         glVertex2f(p.x, p.y);
     }
     glEnd();
 
-    
     glBegin(GL_LINES);
     glColor3f(1.0, 1.0, 1.0);
     if (points.size() >= 2) {
@@ -134,44 +133,76 @@ void loadTexture(const char* filename) {
     }
 }
 
+void savePointsToJson(const std::vector<Point>& points, const std::string& filename) {
+    json jsonPoints;
+
+    for (const Point& p : points) {
+        jsonPoints.push_back({ {"x", p.x}, {"y", p.y} });
+    }
+
+    std::ofstream outputFile(filename);
+    if (!outputFile.is_open()) {
+        std::cout << "Error opening the file!" << std::endl;
+    }
+    else {
+        outputFile << std::setw(4) << jsonPoints;
+    }
+}
+
+void loadPointsFromJson(const std::string& filename) {
+    std::ifstream inputFile(filename);
+    if (!inputFile.is_open()) {
+        std::cout << "Error opening the file!" << std::endl;
+    }
+    else {
+        json jsonPoints;
+        inputFile >> jsonPoints;
+
+        points.clear();
+        for (const auto& point : jsonPoints) {
+            points.push_back({ point["x"], point["y"] });
+        }
+
+        glutPostRedisplay();
+    }
+}
+
 void keyboardFunc(unsigned char key, int x, int y) {
     switch (key) {
     case 'n':
         buttonN = true;
         std::cout << "New";
         glutPostRedisplay();
+        break;
 
     case 'd':
         points.clear();
         glutPostRedisplay();
+        break;
 
     case 'z':
         if (!points.empty()) {
             Point last_symbol = points[get_size_with_1(points)];
-            std::cout << last_symbol;
             points.pop_back();
             cancel_points.push_back(last_symbol);
             glutPostRedisplay();
         }
-        
+        break;
+
     case 'y':
         if (!cancel_points.empty()) {
             points.push_back(cancel_points.back());
             cancel_points.pop_back();
         }
         glutPostRedisplay();
+        break;
 
     case 's':
-        std::ofstream outputFile("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/res/test_output.txt");
-        if (!outputFile.is_open()) {
-            std::cout << "Error opening the file!" << std::endl;
-        }
-        else {
-            outputFile.clear();
-            for (int i = 0; i < get_size_with_1(points); i++) {
-                outputFile << points[i] << " ";
-            }
-        }
+        savePointsToJson(points, "C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/res/test_output.json");
+        break;
+    case 'o':
+        loadPointsFromJson("C:/Users/Misha/Documents/GitHub/misis2023f-22-01-Trufmanov-M-A/prj.cw/res/test_output.json");
+        break;
     }
 }
 
