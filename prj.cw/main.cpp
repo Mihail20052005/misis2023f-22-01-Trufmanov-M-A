@@ -39,6 +39,27 @@ std::vector<Point> points;
 std::vector<Point> new_points;
 std::vector<Point> cancel_points;
 
+int orientation(const Point& p, const Point& q, const Point& r) {
+    float val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (val == 0) return 0;  // Collinear
+    return (val > 0) ? 1 : 2; // Clockwise or counterclockwise
+}
+
+bool isCounterclockwise(const std::vector<Point>& poly) {
+    int n = poly.size();
+    if (n < 3) return true; // Not enough points
+
+    int o = orientation(poly[0], poly[1], poly[2]);
+
+    for (int i = 1; i < n - 1; i++) {
+        int currentOrientation = orientation(poly[i], poly[i + 1], poly[0]);
+
+        if (currentOrientation != o) return false;
+    }
+
+    return true;
+}
+
 void display() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -83,8 +104,14 @@ void display() {
     if (!buttonN && get_size_with_1(points) + 1 > 2) {
         glBegin(GL_POLYGON);
         glColor4f(1.0, 1.0, 1.0, 0.5);
-        for (const Point& p : points) {
-            glVertex2f(p.x, p.y);
+        if (!isCounterclockwise(points)) {
+            for (auto it = points.rbegin(); it != points.rend(); ++it) {
+                glVertex2f(it->x, it->y);
+            }
+        } else {
+            for (const Point& p : points) {
+                glVertex2f(p.x, p.y);
+            }
         }
         glEnd();
     }
@@ -242,6 +269,10 @@ void mouseClick(int button, int state, int x, int y) {
             else {
                 points.push_back({ glX, glY });
                 std::cout << "Points: " << points[points.size() - 1] << ", ";
+            }
+
+            if (!isCounterclockwise(points)) {
+                std::reverse(points.begin(), points.end());
             }
         }
 
