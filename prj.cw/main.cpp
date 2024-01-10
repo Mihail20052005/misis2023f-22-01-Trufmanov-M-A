@@ -41,13 +41,13 @@ std::vector<Point> cancel_points;
 
 int orientation(const Point& p, const Point& q, const Point& r) {
     float val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-    if (val == 0) return 0;  // Collinear
-    return (val > 0) ? 1 : 2; // Clockwise or counterclockwise
+    if (val == 0) return 0;  
+    return (val > 0) ? 1 : 2; 
 }
 
 bool isCounterclockwise(const std::vector<Point>& poly) {
     int n = poly.size();
-    if (n < 3) return true; // Not enough points
+    if (n < 3) return true; 
 
     int o = orientation(poly[0], poly[1], poly[2]);
 
