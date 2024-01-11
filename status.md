@@ -1,4 +1,5 @@
+CHECK: 20240111-192101
 OK: file codeforces.id is correct
-CHECK: 20240111-174900
 OK: folder prj.codeforces structure is correct
-ERROR: CMake generator failed
+OK: CMake generator successed
+OK: CMake build (MSVC x64) successed
